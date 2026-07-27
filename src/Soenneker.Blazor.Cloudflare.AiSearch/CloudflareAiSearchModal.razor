@@ -1,0 +1,16 @@
+@using System.Collections.Generic
+@using Soenneker.Blazor.Cloudflare.AiSearch.Configuration
+@inherits CloudflareAiSearchSearchComponentBase<CloudflareAiSearchModalConfiguration>
+
+<search-modal-snippet @attributes="Attributes"></search-modal-snippet>
+
+@code {
+    protected override void AddComponentAttributes(IDictionary<string, object?> attributes)
+    {
+        base.AddComponentAttributes(attributes);
+        AddAttribute(attributes, "shortcut", Configuration.Shortcut);
+
+        if (Configuration.UseMetaKey.HasValue)
+            attributes["use-meta-key"] = Configuration.UseMetaKey.Value ? "true" : "false";
+    }
+}

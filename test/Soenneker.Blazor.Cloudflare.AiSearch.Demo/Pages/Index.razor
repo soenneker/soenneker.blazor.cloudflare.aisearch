@@ -1,0 +1,298 @@
+@page "/"
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>Soenneker.Blazor.Cloudflare.AiSearch Demo</PageTitle>
+
+<Div Class="grid gap-8 lg:grid-cols-[22rem_minmax(0,1fr)]">
+    <Card Class="h-fit">
+        <CardHeader>
+            <Div Space="Space.Y.Is1">
+                <H2 Margin="Margin.Is0" TextSize="TextSize.Lg">Configure the snippet</H2>
+                <Paragraph Margin="Margin.Is0" TextSize="TextSize.Sm" TextColor="TextColor.MutedForeground">
+                    Paste the public endpoint from your Cloudflare AI Search instance.
+                </Paragraph>
+            </Div>
+        </CardHeader>
+
+        <CardBody>
+            <Div Space="Space.Y.Is4">
+                <Field>
+                    <FieldLabel For="api-url">Public endpoint URL</FieldLabel>
+                    <FieldBody>
+                        <Input Id="api-url"
+                               Placeholder="https://example.search.ai.cloudflare.com/"
+                               @bind-Value="_apiUrl" />
+                    </FieldBody>
+                </Field>
+
+                <Field>
+                    <FieldLabel For="component">Component</FieldLabel>
+                    <FieldBody>
+                        <Select Id="component" TValue="string" @bind-SelectedValue="_selectedSnippet">
+                            <SelectItem TValue="string" ItemValue="@DemoSnippets.SearchBar" Text="Search bar" />
+                            <SelectItem TValue="string" ItemValue="@DemoSnippets.SearchModal" Text="Search modal" />
+                            <SelectItem TValue="string" ItemValue="@DemoSnippets.ChatBubble" Text="Chat bubble" />
+                            <SelectItem TValue="string" ItemValue="@DemoSnippets.ChatPage" Text="Chat page" />
+                        </Select>
+                    </FieldBody>
+                </Field>
+
+                <Field>
+                    <FieldLabel For="theme">Theme</FieldLabel>
+                    <FieldBody>
+                        <Select Id="theme" TValue="string" @bind-SelectedValue="_themeValue">
+                            @foreach (CloudflareAiSearchTheme theme in CloudflareAiSearchTheme.List)
+                            {
+                                <SelectItem TValue="string" ItemValue="@theme.Value" Text="@theme.Name" />
+                            }
+                        </Select>
+                    </FieldBody>
+                </Field>
+
+                <Field>
+                    <FieldLabel For="placeholder">Placeholder</FieldLabel>
+                    <FieldBody>
+                        <Input Id="placeholder" @bind-Value="_placeholder" />
+                    </FieldBody>
+                </Field>
+
+                @if (IsSearchSnippet)
+                {
+                    <Grid Columns="GridCols.Is1.OnSm.Is2" Gap="Gap.Is3">
+                        <Field>
+                            <FieldLabel For="max-results">Max results</FieldLabel>
+                            <FieldBody>
+                                <Input Id="max-results" Type="number" min="1" @bind-Value="_maxResults" />
+                            </FieldBody>
+                        </Field>
+
+                        <Field>
+                            <FieldLabel For="max-render-results">Render</FieldLabel>
+                            <FieldBody>
+                                <Input Id="max-render-results" Type="number" min="1" @bind-Value="_maxRenderResults" />
+                            </FieldBody>
+                        </Field>
+                    </Grid>
+
+                    <Div Display="Display.Flex" AlignUtility="Align.ItemsCenter" Gap="Gap.Is2">
+                        <InputCheckbox Id="show-url" @bind-Value="_showUrl" />
+                        <FieldLabel For="show-url" Margin="Margin.Is0" TextSize="TextSize.Sm">Show result URLs</FieldLabel>
+                    </Div>
+
+                    <Div Display="Display.Flex" AlignUtility="Align.ItemsCenter" Gap="Gap.Is2">
+                        <InputCheckbox Id="show-date" @bind-Value="_showDate" />
+                        <FieldLabel For="show-date" Margin="Margin.Is0" TextSize="TextSize.Sm">Show result dates</FieldLabel>
+                    </Div>
+                }
+
+                <Div Display="Display.Flex" AlignUtility="Align.ItemsCenter" Gap="Gap.Is2">
+                    <InputCheckbox Id="hide-branding" @bind-Value="_hideBranding" />
+                    <FieldLabel For="hide-branding" Margin="Margin.Is0" TextSize="TextSize.Sm">Hide Cloudflare branding</FieldLabel>
+                </Div>
+            </Div>
+        </CardBody>
+    </Card>
+
+    <Div Space="Space.Y.Is6">
+        <Card>
+            <CardHeader>
+                <Div Space="Space.Y.Is1">
+                    <H2 Margin="Margin.Is0" TextSize="TextSize.Lg">Live preview</H2>
+                    <Paragraph Margin="Margin.Is0" TextSize="TextSize.Sm" TextColor="TextColor.MutedForeground">
+                        Your endpoint must allow this demo's origin under Authorized hosts.
+                    </Paragraph>
+                </Div>
+            </CardHeader>
+
+            <CardBody>
+                @if (!string.IsNullOrWhiteSpace(ActiveEndpoint))
+                {
+                    <Alert Class="mb-4">
+                        <AlertTitle>Active Cloudflare endpoint</AlertTitle>
+                        <AlertDescription>
+                            <Code Inline="true">@ActiveEndpoint</Code>
+                        </AlertDescription>
+                    </Alert>
+                }
+
+                @if (!HasValidEndpoint)
+                {
+                    <Alert>
+                        <AlertTitle>Add a complete public endpoint to start</AlertTitle>
+                        <AlertDescription>
+                            Use the HTTPS URL from Cloudflare Dashboard → AI Search → Settings → Public Endpoint.
+                        </AlertDescription>
+                    </Alert>
+                }
+                else
+                {
+                    @switch (_selectedSnippet)
+                    {
+                        case DemoSnippets.SearchBar:
+                            <CloudflareAiSearchBar Configuration="@SearchConfiguration" />
+                            break;
+                        case DemoSnippets.SearchModal:
+                            <CloudflareAiSearchModal Configuration="@ModalConfiguration" />
+                            <Paragraph Margin="Margin.Is4.FromTop.Is0.FromBottom"
+                                       TextSize="TextSize.Sm"
+                                       TextColor="TextColor.MutedForeground">
+                                Press Ctrl/⌘ + K to open the modal.
+                            </Paragraph>
+                            break;
+                        case DemoSnippets.ChatBubble:
+                            <CloudflareAiSearchChatBubble Configuration="@ChatBubbleConfiguration" />
+                            <Paragraph Margin="Margin.Is0"
+                                       TextSize="TextSize.Sm"
+                                       TextColor="TextColor.MutedForeground">
+                                The chat launcher is fixed to the lower corner of the viewport.
+                            </Paragraph>
+                            break;
+                        case DemoSnippets.ChatPage:
+                            <CloudflareAiSearchChatPage Configuration="@ChatPageConfiguration" Class="block min-h-[32rem]" />
+                            break;
+                    }
+                }
+            </CardBody>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <H2 Margin="Margin.Is0" TextSize="TextSize.Lg">Blazor usage</H2>
+            </CardHeader>
+            <CardBody>
+                <PreCode Highlight="false">@UsageExample</PreCode>
+            </CardBody>
+        </Card>
+    </Div>
+</Div>
+
+@code {
+    private const string _publicEndpointBase = "";
+
+    private string _apiUrl = _publicEndpointBase;
+    private string _selectedSnippet = DemoSnippets.SearchBar;
+    private string _themeValue = CloudflareAiSearchTheme.Auto.Value;
+    private string _placeholder = "Search the docs...";
+    private string _maxResults = "50";
+    private string _maxRenderResults = "10";
+    private bool _showUrl = true;
+    private bool _showDate;
+    private bool _hideBranding;
+
+    private CloudflareAiSearchTheme Theme => CloudflareAiSearchTheme.FromValue(_themeValue);
+
+    private bool IsSearchSnippet => _selectedSnippet is DemoSnippets.SearchBar or DemoSnippets.SearchModal;
+
+    private string ActiveEndpoint =>
+        !HasValidEndpoint
+            ? ""
+            : $"{_apiUrl.TrimEnd('/')}/{(IsSearchSnippet ? "search" : "chat/completions")}";
+
+    private bool HasValidEndpoint =>
+        Uri.TryCreate(_apiUrl, UriKind.Absolute, out Uri? uri) &&
+        (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+
+    private CloudflareAiSearchBarConfiguration SearchConfiguration => new()
+    {
+        ApiUrl = _apiUrl,
+        Theme = Theme,
+        Placeholder = _placeholder,
+        MaxResults = ParsePositiveInt(_maxResults),
+        MaxRenderResults = ParsePositiveInt(_maxRenderResults),
+        ShowUrl = _showUrl,
+        ShowDate = _showDate,
+        HideBranding = _hideBranding
+    };
+
+    private CloudflareAiSearchModalConfiguration ModalConfiguration => new()
+    {
+        ApiUrl = _apiUrl,
+        Theme = Theme,
+        Placeholder = _placeholder,
+        MaxResults = ParsePositiveInt(_maxResults),
+        MaxRenderResults = ParsePositiveInt(_maxRenderResults),
+        ShowUrl = _showUrl,
+        ShowDate = _showDate,
+        HideBranding = _hideBranding
+    };
+
+    private CloudflareAiSearchChatBubbleConfiguration ChatBubbleConfiguration => new()
+    {
+        ApiUrl = _apiUrl,
+        Theme = Theme,
+        Placeholder = _placeholder,
+        HideBranding = _hideBranding
+    };
+
+    private CloudflareAiSearchChatPageConfiguration ChatPageConfiguration => new()
+    {
+        ApiUrl = _apiUrl,
+        Theme = Theme,
+        Placeholder = _placeholder,
+        HideBranding = _hideBranding
+    };
+
+    private string UsageExample
+    {
+        get
+        {
+            var lines = new List<string>
+            {
+                $"private readonly {ConfigurationTypeName} _configuration = new()",
+                "{",
+                "    ApiUrl = \"https://<INSTANCE_ID>.search.ai.cloudflare.com/\",",
+                $"    Theme = CloudflareAiSearchTheme.{Theme.Name},",
+                $"    Placeholder = \"{_placeholder}\""
+            };
+
+            if (IsSearchSnippet)
+            {
+                lines[^1] += ",";
+                lines.Add($"    MaxResults = {ParsePositiveInt(_maxResults) ?? 50},");
+                lines.Add($"    MaxRenderResults = {ParsePositiveInt(_maxRenderResults) ?? 10},");
+                lines.Add($"    ShowUrl = {_showUrl.ToString().ToLowerInvariant()},");
+                lines.Add($"    ShowDate = {_showDate.ToString().ToLowerInvariant()}");
+            }
+
+            lines.Add("};");
+            lines.Add("");
+            lines.Add($"<{ComponentName} Configuration=\"_configuration\" />");
+
+            return string.Join(Environment.NewLine, lines);
+        }
+    }
+
+    private string ComponentName => _selectedSnippet switch
+    {
+        DemoSnippets.SearchBar => nameof(CloudflareAiSearchBar),
+        DemoSnippets.SearchModal => nameof(CloudflareAiSearchModal),
+        DemoSnippets.ChatBubble => nameof(CloudflareAiSearchChatBubble),
+        DemoSnippets.ChatPage => nameof(CloudflareAiSearchChatPage),
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    private string ConfigurationTypeName => _selectedSnippet switch
+    {
+        DemoSnippets.SearchBar => nameof(CloudflareAiSearchBarConfiguration),
+        DemoSnippets.SearchModal => nameof(CloudflareAiSearchModalConfiguration),
+        DemoSnippets.ChatBubble => nameof(CloudflareAiSearchChatBubbleConfiguration),
+        DemoSnippets.ChatPage => nameof(CloudflareAiSearchChatPageConfiguration),
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    private static int? ParsePositiveInt(string value)
+    {
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result) && result > 0
+            ? result
+            : null;
+    }
+
+    private static class DemoSnippets
+    {
+        public const string SearchBar = "search-bar";
+        public const string SearchModal = "search-modal";
+        public const string ChatBubble = "chat-bubble";
+        public const string ChatPage = "chat-page";
+    }
+}
