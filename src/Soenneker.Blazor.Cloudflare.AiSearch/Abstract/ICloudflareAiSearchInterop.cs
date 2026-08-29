@@ -15,5 +15,6 @@ public interface ICloudflareAiSearchInterop : IAsyncDisposable
     /// <param name="scriptUrl">The absolute URL of Cloudflare's AI Search snippet ES module.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A task that completes when the Cloudflare Ai Search is ready for use.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="scriptUrl"/> is not an absolute HTTPS URL or a loopback HTTP URL.</exception>
     ValueTask Initialize(string scriptUrl, CancellationToken cancellationToken = default);
 }

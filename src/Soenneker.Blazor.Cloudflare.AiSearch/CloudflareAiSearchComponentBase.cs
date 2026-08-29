@@ -40,11 +40,7 @@ public abstract class CloudflareAiSearchComponentBase<TConfiguration> : Componen
         if (string.IsNullOrWhiteSpace(Configuration.ApiUrl))
             throw new InvalidOperationException($"{nameof(Configuration.ApiUrl)} is required.");
 
-        if (!Uri.TryCreate(Configuration.ApiUrl, UriKind.Absolute, out Uri? uri) ||
-            (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
-        {
-            throw new InvalidOperationException($"{nameof(Configuration.ApiUrl)} must be an absolute HTTP or HTTPS URL.");
-        }
+        ValidateApiUrl(Configuration.ApiUrl);
 
         var attributes = AdditionalAttributes is null
             ? new Dictionary<string, object?>()
@@ -101,11 +97,40 @@ public abstract class CloudflareAiSearchComponentBase<TConfiguration> : Componen
     private string GetScriptUrl()
     {
         if (!string.IsNullOrWhiteSpace(Configuration.ScriptUrl))
+        {
+            ValidateSecureAbsoluteUrl(Configuration.ScriptUrl, nameof(Configuration.ScriptUrl));
             return Configuration.ScriptUrl;
+        }
 
         if (string.IsNullOrWhiteSpace(Configuration.ScriptVersion))
             throw new InvalidOperationException($"{nameof(Configuration.ScriptVersion)} is required when {nameof(Configuration.ScriptUrl)} is not specified.");
 
-        return $"{Configuration.ApiUrl.TrimEnd('/')}/assets/v{Configuration.ScriptVersion}/search-snippet.es.js";
+        string version = Uri.EscapeDataString(Configuration.ScriptVersion);
+        return $"{Configuration.ApiUrl.TrimEnd('/')}/assets/v{version}/search-snippet.es.js";
+    }
+
+    private static void ValidateApiUrl(string apiUrl)
+    {
+        Uri uri = ValidateSecureAbsoluteUrl(apiUrl, nameof(Configuration.ApiUrl));
+
+        if (!string.IsNullOrEmpty(uri.UserInfo) || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
+            throw new InvalidOperationException($"{nameof(Configuration.ApiUrl)} cannot contain credentials, a query, or a fragment.");
+    }
+
+    private static Uri ValidateSecureAbsoluteUrl(string value, string propertyName)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? uri))
+            throw new InvalidOperationException($"{propertyName} must be an absolute URL.");
+
+        bool isHttps = string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+        bool isLoopbackHttp = uri.IsLoopback && string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
+
+        if (!isHttps && !isLoopbackHttp)
+            throw new InvalidOperationException($"{propertyName} must use HTTPS unless it is a loopback HTTP URL.");
+
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+            throw new InvalidOperationException($"{propertyName} cannot contain credentials.");
+
+        return uri;
     }
 }

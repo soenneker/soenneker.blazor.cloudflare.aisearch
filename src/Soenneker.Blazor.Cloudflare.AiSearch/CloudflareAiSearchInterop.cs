@@ -49,6 +49,7 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
     public async ValueTask Initialize(string scriptUrl, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed.Value, this);
+        ValidateScriptUrl(scriptUrl);
 
         CancellationToken linked = _cancellationScope.CancellationToken.Link(cancellationToken, out CancellationTokenSource? source);
 
@@ -66,5 +67,22 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
 
         await _initializer.DisposeAsync();
         await _cancellationScope.DisposeAsync();
+    }
+
+    private static void ValidateScriptUrl(string scriptUrl)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(scriptUrl);
+
+        if (!Uri.TryCreate(scriptUrl, UriKind.Absolute, out Uri? uri))
+            throw new ArgumentException("The Cloudflare AI Search script URL must be absolute.", nameof(scriptUrl));
+
+        bool isHttps = string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+        bool isLoopbackHttp = uri.IsLoopback && string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
+
+        if (!isHttps && !isLoopbackHttp)
+            throw new ArgumentException("The Cloudflare AI Search script URL must use HTTPS unless it is a loopback HTTP URL.", nameof(scriptUrl));
+
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+            throw new ArgumentException("The Cloudflare AI Search script URL cannot contain credentials.", nameof(scriptUrl));
     }
 }

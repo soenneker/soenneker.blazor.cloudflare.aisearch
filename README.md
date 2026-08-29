@@ -4,57 +4,77 @@
 [![](https://img.shields.io/badge/Demo-Live-blueviolet?style=for-the-badge&logo=github)](https://soenneker.github.io/soenneker.blazor.cloudflare.aisearch)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.blazor.cloudflare.aisearch/codeql.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.blazor.cloudflare.aisearch/actions/workflows/codeql.yml)
 
-# ![](https://user-images.githubusercontent.com/4441470/224455560-91ed3ee7-f510-4041-a8d2-3fc093025112.png) Soenneker.Blazor.Cloudflare.AiSearch
-### A Blazor library for integrating Cloudflare AI Search.
+# Soenneker.Blazor.Cloudflare.AiSearch
 
-## Installation
+Blazor components for Cloudflare AI Search's search bar, search modal, chat bubble, and full-page chat snippets.
+
+## Cloudflare setup
+
+In the AI Search instance, enable its public endpoint and add the application's origin to **Authorized hosts**. Use that public endpoint in the component; do not put Cloudflare API tokens or other secrets in a Blazor application.
+
+## Installation and registration
 
 ```bash
 dotnet add package Soenneker.Blazor.Cloudflare.AiSearch
 ```
 
-## Setup
-
-Register services in `Program.cs`:
-
 ```csharp
+using Soenneker.Blazor.Cloudflare.AiSearch.Registrars;
+
 builder.Services.AddCloudflareAiSearchInteropAsScoped();
 ```
 
-## Usage
-
-Enable a public endpoint for your AI Search instance, allow your application's origin under **Authorized hosts**, and render the component:
+## Search bar
 
 ```razor
 @using Soenneker.Blazor.Cloudflare.AiSearch
 @using Soenneker.Blazor.Cloudflare.AiSearch.Configuration
-@using Soenneker.Blazor.Cloudflare.AiSearch.Enums
 
-<CloudflareAiSearchBar Configuration="_configuration" />
+<CloudflareAiSearchBar Configuration="_search" />
 
 @code {
-    private readonly CloudflareAiSearchBarConfiguration _configuration = new()
+    private readonly CloudflareAiSearchBarConfiguration _search = new()
     {
-        ApiUrl = "https://<INSTANCE_ID>.search.ai.cloudflare.com/",
-        Placeholder = "Search the docs...",
+        ApiUrl = "https://your-instance.search.ai.cloudflare.com/",
+        Placeholder = "Search the documentation...",
         MaxResults = 50,
         MaxRenderResults = 10,
-        ShowUrl = true
+        DebounceMilliseconds = 250,
+        ShowUrl = true,
+        ShowDate = true
     };
 }
 ```
 
-The package provides four components matching Cloudflare's UI surfaces:
+The component loads Cloudflare's ES module after its first render. `ApiUrl` must be an absolute HTTPS endpoint without credentials, a query, or a fragment. Loopback HTTP is accepted for local development.
 
-- `CloudflareAiSearchBar`
-- `CloudflareAiSearchModal`
-- `CloudflareAiSearchChatBubble`
-- `CloudflareAiSearchChatPage`
+## Available components
 
-Each component loads Cloudflare's snippet module automatically after its first render.
+| Component | Configuration | Use |
+| --- | --- | --- |
+| `CloudflareAiSearchBar` | `CloudflareAiSearchBarConfiguration` | Inline search input and results |
+| `CloudflareAiSearchModal` | `CloudflareAiSearchModalConfiguration` | Search dialog, including keyboard shortcut options |
+| `CloudflareAiSearchChatBubble` | `CloudflareAiSearchChatBubbleConfiguration` | Floating conversational search |
+| `CloudflareAiSearchChatPage` | `CloudflareAiSearchChatPageConfiguration` | Full-page conversational search |
 
-Each component has a matching configuration type: `CloudflareAiSearchBarConfiguration`, `CloudflareAiSearchModalConfiguration`, `CloudflareAiSearchChatBubbleConfiguration`, and `CloudflareAiSearchChatPageConfiguration`.
+All configurations support `Theme`, `Placeholder`, `HideBranding`, and JSON `Translations`. Search configurations add result limits, debounce, URL/date display, grouping, and JSON `RequestOptions`. Chat configurations add JSON `ChatQueryRewrite`.
 
-Common configuration options include `Theme`, `Placeholder`, `HideBranding`, and `Translations`. Search configurations also support `MaxResults`, `MaxRenderResults`, `DebounceMilliseconds`, `ShowUrl`, `ShowDate`, `GroupBy`, and `RequestOptions`. Chat configuration supports `ChatQueryRewrite`.
+## Snippet version and hosting
 
-The component defaults to Cloudflare snippet version `0.0.25`. Use `ScriptVersion` to select another hosted version, or `ScriptUrl` to provide the full ES module URL.
+By default, the module URL is built from the public endpoint and snippet version `0.0.25`:
+
+```csharp
+private readonly CloudflareAiSearchBarConfiguration _search = new()
+{
+    ApiUrl = "https://your-instance.search.ai.cloudflare.com/",
+    ScriptVersion = "0.0.25"
+};
+```
+
+Set `ScriptUrl` to an absolute module URL when self-hosting or pinning a different distribution:
+
+```csharp
+ScriptUrl = "https://static.example.com/cloudflare/search-snippet.es.js"
+```
+
+The module URL must use HTTPS, except for loopback HTTP development URLs. It is executable browser code, so only configure an origin you trust and allow it in the application's Content Security Policy. Search queries and chat messages are sent to the configured public endpoint; apply appropriate disclosure and consent for the indexed content and user input.
