@@ -13,6 +13,7 @@ public interface ICloudflareAiSearchInterop : IAsyncDisposable
     /// Ensures the package interop and the Cloudflare AI Search snippet module have been loaded.
     /// </summary>
     /// <param name="scriptUrl">The absolute URL of Cloudflare's AI Search snippet ES module.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>A task that completes when the Cloudflare Ai Search is ready for use.</returns>
     ValueTask Initialize(string scriptUrl, CancellationToken cancellationToken = default);
 }

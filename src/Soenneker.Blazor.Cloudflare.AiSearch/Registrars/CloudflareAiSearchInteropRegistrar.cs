@@ -13,6 +13,8 @@ public static class CloudflareAiSearchInteropRegistrar
     /// <summary>
     /// Adds <see cref="ICloudflareAiSearchInterop"/> as a scoped service.
     /// </summary>
+    /// <param name="services">Service collection that receives the registration.</param>
+    /// <returns>The same service collection, so additional registrations can be chained.</returns>
     public static IServiceCollection AddCloudflareAiSearchInteropAsScoped(this IServiceCollection services)
     {
         services.AddResourceLoaderAsScoped()
