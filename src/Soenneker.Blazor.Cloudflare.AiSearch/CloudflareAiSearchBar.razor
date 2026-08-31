@@ -1,16 +1,40 @@
 @using Soenneker.Blazor.Cloudflare.AiSearch.Configuration
 @using Soenneker.Blazor.Cloudflare.AiSearch.Abstract
+@using Microsoft.AspNetCore.Components.Routing
 @inherits CloudflareAiSearchSearchComponentBase<CloudflareAiSearchBarConfiguration>
 @inject ICloudflareAiSearchInterop AiSearchInterop
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
 
 <search-bar-snippet @ref="_searchBar" @attributes="Attributes"></search-bar-snippet>
 
 @code {
     private ElementReference _searchBar;
+    private bool _configured;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
         await AiSearchInterop.ConfigureSearchBar(_searchBar, Configuration.HideSubmitButton);
+        _configured = true;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (_configured)
+            _ = InvokeAsync(async () => await AiSearchInterop.DismissSearchBar(_searchBar));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+
+        if (_configured)
+            await AiSearchInterop.DisposeSearchBar(_searchBar);
     }
 }

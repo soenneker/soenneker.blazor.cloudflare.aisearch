@@ -27,4 +27,20 @@ public interface ICloudflareAiSearchInterop : IAsyncDisposable
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A task that completes when the options have been applied.</returns>
     ValueTask ConfigureSearchBar(ElementReference searchBar, bool hideSubmitButton, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Dismisses the results panel for a rendered Cloudflare AI Search bar.
+    /// </summary>
+    /// <param name="searchBar">The rendered Cloudflare AI Search bar element.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>A task that completes when the results panel has been dismissed.</returns>
+    ValueTask DismissSearchBar(ElementReference searchBar, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes browser event handlers and observers associated with a rendered Cloudflare AI Search bar.
+    /// </summary>
+    /// <param name="searchBar">The rendered Cloudflare AI Search bar element.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>A task that completes when the search bar resources have been released.</returns>
+    ValueTask DisposeSearchBar(ElementReference searchBar, CancellationToken cancellationToken = default);
 }

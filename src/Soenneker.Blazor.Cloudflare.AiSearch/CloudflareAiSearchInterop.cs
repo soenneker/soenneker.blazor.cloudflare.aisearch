@@ -18,6 +18,8 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
     private const string _modulePath = "_content/Soenneker.Blazor.Cloudflare.AiSearch/js/aisearchinterop.js";
     private const string _jsInitialize = "AiSearchInterop.initialize";
     private const string _jsConfigureSearchBar = "AiSearchInterop.configureSearchBar";
+    private const string _jsDismissSearchBar = "AiSearchInterop.dismissSearchBar";
+    private const string _jsDisposeSearchBar = "AiSearchInterop.disposeSearchBar";
 
     private readonly IJSRuntime _jsRuntime;
     private readonly IResourceLoader _resourceLoader;
@@ -72,6 +74,32 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
         {
             await EnsureInitialized(linked);
             await _jsRuntime.InvokeVoidAsync(_jsConfigureSearchBar, linked, searchBar, hideSubmitButton);
+        }
+    }
+
+    public async ValueTask DismissSearchBar(ElementReference searchBar, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed.Value, this);
+
+        CancellationToken linked = _cancellationScope.CancellationToken.Link(cancellationToken, out CancellationTokenSource? source);
+
+        using (source)
+        {
+            await EnsureInitialized(linked);
+            await _jsRuntime.InvokeVoidAsync(_jsDismissSearchBar, linked, searchBar);
+        }
+    }
+
+    public async ValueTask DisposeSearchBar(ElementReference searchBar, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed.Value, this);
+
+        CancellationToken linked = _cancellationScope.CancellationToken.Link(cancellationToken, out CancellationTokenSource? source);
+
+        using (source)
+        {
+            await EnsureInitialized(linked);
+            await _jsRuntime.InvokeVoidAsync(_jsDisposeSearchBar, linked, searchBar);
         }
     }
 

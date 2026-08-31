@@ -1,4 +1,8 @@
 const searchBarStyles = `
+    :host([data-soenneker-search-dismissed]) .search-content {
+        display: none !important;
+    }
+
     .search-input-wrapper {
         min-height: 38px;
         padding: 0 11px;
@@ -158,6 +162,39 @@ const searchBarStyles = `
     }
 `;
 
+const searchBarDismissals = new WeakMap();
+const dismissedAttribute = "data-soenneker-search-dismissed";
+
+function configureSearchBarDismissal(searchBar) {
+    if (searchBarDismissals.has(searchBar))
+        return;
+
+    const show = () => searchBar.removeAttribute(dismissedAttribute);
+    const dismiss = () => searchBar.setAttribute(dismissedAttribute, "");
+
+    const onDocumentPointerDown = event => {
+        if (!event.composedPath().includes(searchBar))
+            dismiss();
+    };
+
+    const onResultClick = event => {
+        if (event.composedPath().some(element => element?.matches?.("a.search-result-item")))
+            queueMicrotask(dismiss);
+    };
+
+    document.addEventListener("pointerdown", onDocumentPointerDown, true);
+    searchBar.addEventListener("focusin", show);
+    searchBar.addEventListener("input", show);
+    searchBar.addEventListener("click", onResultClick);
+
+    searchBarDismissals.set(searchBar, () => {
+        document.removeEventListener("pointerdown", onDocumentPointerDown, true);
+        searchBar.removeEventListener("focusin", show);
+        searchBar.removeEventListener("input", show);
+        searchBar.removeEventListener("click", onResultClick);
+    });
+}
+
 export class AiSearchInterop {
     constructor() {
         this.modules = new Map();
@@ -189,6 +226,8 @@ export class AiSearchInterop {
             throw new Error("The Cloudflare AI Search bar shadow root is unavailable.");
         }
 
+        configureSearchBarDismissal(searchBar);
+
         const presentationStyleSelector = "style[data-soenneker-search-bar]";
 
         if (!searchBar.shadowRoot.querySelector(presentationStyleSelector)) {
@@ -214,6 +253,16 @@ export class AiSearchInterop {
         style.dataset.soennekerHideSubmitButton = "";
         style.textContent = ".search-submit-button { display: none !important; }";
         searchBar.shadowRoot.appendChild(style);
+    }
+
+    dismissSearchBar(searchBar) {
+        searchBar?.setAttribute(dismissedAttribute, "");
+    }
+
+    disposeSearchBar(searchBar) {
+        searchBarDismissals.get(searchBar)?.();
+        searchBarDismissals.delete(searchBar);
+
     }
 }
 
