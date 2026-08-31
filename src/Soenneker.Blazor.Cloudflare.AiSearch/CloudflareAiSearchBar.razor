@@ -1,4 +1,16 @@
 @using Soenneker.Blazor.Cloudflare.AiSearch.Configuration
+@using Soenneker.Blazor.Cloudflare.AiSearch.Abstract
 @inherits CloudflareAiSearchSearchComponentBase<CloudflareAiSearchBarConfiguration>
+@inject ICloudflareAiSearchInterop AiSearchInterop
 
-<search-bar-snippet @attributes="Attributes"></search-bar-snippet>
+<search-bar-snippet @ref="_searchBar" @attributes="Attributes"></search-bar-snippet>
+
+@code {
+    private ElementReference _searchBar;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        await AiSearchInterop.ConfigureSearchBar(_searchBar, Configuration.HideSubmitButton);
+    }
+}

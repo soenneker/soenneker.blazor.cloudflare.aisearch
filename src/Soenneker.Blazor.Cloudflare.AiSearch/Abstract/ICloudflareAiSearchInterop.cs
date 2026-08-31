@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
 
 namespace Soenneker.Blazor.Cloudflare.AiSearch.Abstract;
 
@@ -17,4 +18,13 @@ public interface ICloudflareAiSearchInterop : IAsyncDisposable
     /// <returns>A task that completes when the Cloudflare Ai Search is ready for use.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="scriptUrl"/> is not an absolute HTTPS URL or a loopback HTTP URL.</exception>
     ValueTask Initialize(string scriptUrl, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Applies supported presentation options to a rendered Cloudflare AI Search bar.
+    /// </summary>
+    /// <param name="searchBar">The rendered Cloudflare AI Search bar element.</param>
+    /// <param name="hideSubmitButton">Whether the search bar's submit button should be hidden.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>A task that completes when the options have been applied.</returns>
+    ValueTask ConfigureSearchBar(ElementReference searchBar, bool hideSubmitButton, CancellationToken cancellationToken = default);
 }

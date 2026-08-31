@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
+using Microsoft.AspNetCore.Components;
 using Soenneker.Asyncs.Initializers;
 using Soenneker.Atomics.ValueBools;
 using Soenneker.Blazor.Utils.ResourceLoader.Abstract;
@@ -16,6 +17,7 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
 {
     private const string _modulePath = "_content/Soenneker.Blazor.Cloudflare.AiSearch/js/aisearchinterop.js";
     private const string _jsInitialize = "AiSearchInterop.initialize";
+    private const string _jsConfigureSearchBar = "AiSearchInterop.configureSearchBar";
 
     private readonly IJSRuntime _jsRuntime;
     private readonly IResourceLoader _resourceLoader;
@@ -57,6 +59,19 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
         {
             await EnsureInitialized(linked);
             await _jsRuntime.InvokeVoidAsync(_jsInitialize, linked, scriptUrl);
+        }
+    }
+
+    public async ValueTask ConfigureSearchBar(ElementReference searchBar, bool hideSubmitButton, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed.Value, this);
+
+        CancellationToken linked = _cancellationScope.CancellationToken.Link(cancellationToken, out CancellationTokenSource? source);
+
+        using (source)
+        {
+            await EnsureInitialized(linked);
+            await _jsRuntime.InvokeVoidAsync(_jsConfigureSearchBar, linked, searchBar, hideSubmitButton);
         }
     }
 

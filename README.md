@@ -36,6 +36,7 @@ builder.Services.AddCloudflareAiSearchInteropAsScoped();
     private readonly CloudflareAiSearchBarConfiguration _search = new()
     {
         ApiUrl = "https://your-instance.search.ai.cloudflare.com/",
+        HideSubmitButton = true,
         Placeholder = "Search the documentation...",
         MaxResults = 50,
         MaxRenderResults = 10,
