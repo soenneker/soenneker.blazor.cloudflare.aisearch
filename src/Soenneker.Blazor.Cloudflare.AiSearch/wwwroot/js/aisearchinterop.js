@@ -26,6 +26,7 @@ const searchBarStyles = `
         box-shadow: 0 0 0 3px var(--search-snippet-focus-ring);
     }
 
+    .search-view:has(.search-input:not(:placeholder-shown)),
     .search-view:has(.search-input:not(:placeholder-shown)) .search-input-wrapper {
         border-radius: var(--search-snippet-border-radius);
     }
