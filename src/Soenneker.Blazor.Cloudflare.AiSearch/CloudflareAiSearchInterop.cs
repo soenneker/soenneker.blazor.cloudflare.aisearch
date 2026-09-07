@@ -40,14 +40,9 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
         await _resourceLoader.LoadModuleScript(_modulePath, cancellationToken: cancellationToken);
     }
 
-    private async ValueTask EnsureInitialized(CancellationToken cancellationToken)
+    private ValueTask EnsureInitialized(CancellationToken cancellationToken)
     {
-        CancellationToken linked = _cancellationScope.CancellationToken.Link(cancellationToken, out CancellationTokenSource? source);
-
-        using (source)
-        {
-            await _initializer.Init(linked);
-        }
+        return _initializer.Init(cancellationToken);
     }
 
     public async ValueTask Initialize(string scriptUrl, CancellationToken cancellationToken = default)
