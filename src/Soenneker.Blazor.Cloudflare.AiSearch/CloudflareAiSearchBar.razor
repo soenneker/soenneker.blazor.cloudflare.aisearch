@@ -11,6 +11,7 @@
 @code {
     private ElementReference _searchBar;
     private bool _configured;
+    private bool _hideSubmitButton;
 
     protected override void OnInitialized()
     {
@@ -20,8 +21,13 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
-        await AiSearchInterop.ConfigureSearchBar(_searchBar, Configuration.HideSubmitButton);
-        _configured = true;
+        bool hideSubmitButton = Configuration.HideSubmitButton;
+        if (!_configured || _hideSubmitButton != hideSubmitButton)
+        {
+            await AiSearchInterop.ConfigureSearchBar(_searchBar, hideSubmitButton);
+            _hideSubmitButton = hideSubmitButton;
+            _configured = true;
+        }
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs args)

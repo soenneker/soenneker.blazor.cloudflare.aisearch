@@ -14,6 +14,12 @@ public abstract class CloudflareAiSearchComponentBase<TConfiguration> : Componen
     where TConfiguration : CloudflareAiSearchConfiguration, new()
 {
     private string? _loadedScriptUrl;
+    private string? _validatedApiUrl;
+    private string? _scriptApiUrl;
+    private string? _scriptVersion;
+    private string? _configuredScriptUrl;
+    private string? _scriptUrl;
+    private readonly Dictionary<string, object?> _attributes = new(12);
 
     [Inject]
     private ICloudflareAiSearchInterop Interop { get; set; } = null!;
@@ -21,7 +27,7 @@ public abstract class CloudflareAiSearchComponentBase<TConfiguration> : Componen
     /// <summary>
     /// The attributes applied to the rendered Cloudflare web component.
     /// </summary>
-    protected IReadOnlyDictionary<string, object?> Attributes { get; private set; } = new Dictionary<string, object?>();
+    protected IReadOnlyDictionary<string, object?> Attributes => _attributes;
 
     /// <summary>
     /// The component configuration.
@@ -40,11 +46,19 @@ public abstract class CloudflareAiSearchComponentBase<TConfiguration> : Componen
         if (string.IsNullOrWhiteSpace(Configuration.ApiUrl))
             throw new InvalidOperationException($"{nameof(Configuration.ApiUrl)} is required.");
 
-        ValidateApiUrl(Configuration.ApiUrl);
+        if (_validatedApiUrl != Configuration.ApiUrl)
+        {
+            ValidateApiUrl(Configuration.ApiUrl);
+            _validatedApiUrl = Configuration.ApiUrl;
+        }
 
-        var attributes = AdditionalAttributes is null
-            ? new Dictionary<string, object?>()
-            : new Dictionary<string, object?>(AdditionalAttributes);
+        Dictionary<string, object?> attributes = _attributes;
+        attributes.Clear();
+        if (AdditionalAttributes is not null)
+        {
+            foreach (KeyValuePair<string, object?> attribute in AdditionalAttributes)
+                attributes[attribute.Key] = attribute.Value;
+        }
 
         attributes["api-url"] = Configuration.ApiUrl;
         attributes["theme"] = Configuration.Theme.Value;
@@ -56,7 +70,6 @@ public abstract class CloudflareAiSearchComponentBase<TConfiguration> : Componen
             attributes["hide-branding"] = "true";
 
         AddComponentAttributes(attributes);
-        Attributes = attributes;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -95,6 +108,19 @@ public abstract class CloudflareAiSearchComponentBase<TConfiguration> : Componen
     }
 
     private string GetScriptUrl()
+    {
+        if (_scriptUrl is not null && _scriptApiUrl == Configuration.ApiUrl &&
+            _scriptVersion == Configuration.ScriptVersion && _configuredScriptUrl == Configuration.ScriptUrl)
+            return _scriptUrl;
+
+        string result = BuildScriptUrl();
+        _scriptApiUrl = Configuration.ApiUrl;
+        _scriptVersion = Configuration.ScriptVersion;
+        _configuredScriptUrl = Configuration.ScriptUrl;
+        return _scriptUrl = result;
+    }
+
+    private string BuildScriptUrl()
     {
         if (!string.IsNullOrWhiteSpace(Configuration.ScriptUrl))
         {

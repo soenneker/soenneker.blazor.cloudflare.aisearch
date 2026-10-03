@@ -15,7 +15,7 @@ namespace Soenneker.Blazor.Cloudflare.AiSearch;
 /// <inheritdoc cref="ICloudflareAiSearchInterop"/>
 public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
 {
-    private const string _modulePath = "_content/Soenneker.Blazor.Cloudflare.AiSearch/js/aisearchinterop.js";
+    private const string _modulePath = "./_content/Soenneker.Blazor.Cloudflare.AiSearch/js/aisearchinterop.js";
     private const string _jsInitialize = "AiSearchInterop.initialize";
     private const string _jsConfigureSearchBar = "AiSearchInterop.configureSearchBar";
     private const string _jsDismissSearchBar = "AiSearchInterop.dismissSearchBar";
