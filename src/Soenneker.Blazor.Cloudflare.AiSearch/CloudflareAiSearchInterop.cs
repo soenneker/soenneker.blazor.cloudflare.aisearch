@@ -54,8 +54,15 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
 
         using (source)
         {
-            await EnsureInitialized(linked);
-            await _jsRuntime.InvokeVoidAsync(_jsInitialize, linked, scriptUrl);
+            try
+            {
+                await EnsureInitialized(linked);
+                await _jsRuntime.InvokeVoidAsync(_jsInitialize, linked, scriptUrl);
+            }
+            catch (JSException exception)
+            {
+                throw new JSException($"JavaScript operation 'CloudflareAiSearchInterop.Initialize' failed: {exception.Message}", exception);
+            }
         }
     }
 
@@ -67,8 +74,15 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
 
         using (source)
         {
-            await EnsureInitialized(linked);
-            await _jsRuntime.InvokeVoidAsync(_jsConfigureSearchBar, linked, searchBar, hideSubmitButton);
+            try
+            {
+                await EnsureInitialized(linked);
+                await _jsRuntime.InvokeVoidAsync(_jsConfigureSearchBar, linked, searchBar, hideSubmitButton);
+            }
+            catch (JSException exception)
+            {
+                throw new JSException($"JavaScript operation 'CloudflareAiSearchInterop.ConfigureSearchBar' failed: {exception.Message}", exception);
+            }
         }
     }
 
@@ -80,8 +94,15 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
 
         using (source)
         {
-            await EnsureInitialized(linked);
-            await _jsRuntime.InvokeVoidAsync(_jsDismissSearchBar, linked, searchBar);
+            try
+            {
+                await EnsureInitialized(linked);
+                await _jsRuntime.InvokeVoidAsync(_jsDismissSearchBar, linked, searchBar);
+            }
+            catch (JSException exception)
+            {
+                throw new JSException($"JavaScript operation 'CloudflareAiSearchInterop.DismissSearchBar' failed: {exception.Message}", exception);
+            }
         }
     }
 
@@ -93,8 +114,15 @@ public sealed class CloudflareAiSearchInterop : ICloudflareAiSearchInterop
 
         using (source)
         {
-            await EnsureInitialized(linked);
-            await _jsRuntime.InvokeVoidAsync(_jsDisposeSearchBar, linked, searchBar);
+            try
+            {
+                await EnsureInitialized(linked);
+                await _jsRuntime.InvokeVoidAsync(_jsDisposeSearchBar, linked, searchBar);
+            }
+            catch (JSException exception)
+            {
+                throw new JSException($"JavaScript operation 'CloudflareAiSearchInterop.DisposeSearchBar' failed: {exception.Message}", exception);
+            }
         }
     }
 
